@@ -1,68 +1,122 @@
-import './App.css'
-import { useState, useEffect } from 'react'
-import { Note } from './Note'
-import axios from 'axios'
+import React, { useState, useEffect } from 'react'
+import Note from './components/Note'
+import Notification from './components/Notification'
+import noteService from './services/notes'
+import loginService from './services/login'
+import LoginForm from './components/LoginForm.js'
+import NoteForm from './components/NoteForm.js'
 
-export default function App (props) {
-  const [notes, setNotes] = useState(props.notes)
-  const [newNote, setNewNote] = useState('')
+const App = () => {
+  const [notes, setNotes] = useState([])
+
   const [showAll, setShowAll] = useState(true)
+  const [errorMessage, setErrorMessage] = useState(null)
+
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
-    axios
-      .get('http://localhost:4001/api/notes')
-      .then((response) => {
-        setNotes(response.data)
-        console.log(response.data)
+    noteService
+      .getAll()
+      .then(initialNotes => {
+        setNotes(initialNotes)
       })
   }, [])
 
-  const handleChange = (event) => {
-    setNewNote(event.target.value)
-  }
-
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    const noteToAddToState = {
-      id: notes.length + 1,
-      content: newNote,
-      date: new Date().toISOString(),
-      important: Math.random() < 0.5
+  useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem('loggedNoteAppUser')
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON)
+      setUser(user)
+      noteService.setToken(user.token)
     }
+  }, [])
 
-    setNotes([...notes, noteToAddToState]) // Esta manera se llama spread.
-    setNewNote('')
+  const handleLogout = () => {
+    setUser(null)
+    noteService.setToken(null)
+    window.localStorage.removeItem('loggedNoteAppUser')
   }
 
-  const handleShowAll = () => {
-    setShowAll(() => !showAll)
+  const addNote = (noteObject) => {
+    noteService
+      .create(noteObject)
+      .then(returnedNote => {
+        setNotes(notes.concat(returnedNote))
+      })
   }
 
-  if (typeof notes === 'undefined' || notes === null || notes.length === 0) {
-    return 'No tenemos notas que mostrar'
+  const handleLogin = async (event) => {
+    event.preventDefault()
+
+    try {
+      const user = await loginService.login({
+        username,
+        password
+      })
+
+      window.localStorage.setItem(
+        'loggedNoteAppUser', JSON.stringify(user)
+      )
+
+      noteService.setToken(user.token)
+
+      setUser(user)
+      setUsername('')
+      setPassword('')
+    } catch (e) {
+      setErrorMessage('Wrong credentials')
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+    }
   }
+
+  const notesToShow = showAll
+    ? notes
+    : notes.filter(note => note.important)
 
   return (
     <div>
       <h1>Notes</h1>
-      <button onClick={handleShowAll}>
-        {showAll ? 'Show only important' : 'Show all'}
-      </button>
-      <ol>
-        {notes
-          .filter((note) => {
-            if (showAll === true) return true
-            return note.important === true
-          })
-          .map((note) => (
-            <Note key={note.id} {...note} />
-          ))}
-      </ol>
 
-      <form onSubmit={handleSubmit}>
-        <input type='text' onChange={handleChange} value={newNote} />
-        <button>Crear nota</button>
-      </form>
+      <Notification message={errorMessage} />
+
+      {
+        user
+          ? <NoteForm
+              addNote={addNote}
+              handleLogout={handleLogout}
+            />
+          : <LoginForm
+              username={username}
+              password={password}
+              handleUsernameChange={
+                ({ target }) => setUsername(target.value)
+              }
+              handlePasswordChange={
+                ({ target }) => setPassword(target.value)
+              }
+              handleSubmit={handleLogin}
+            />
+      }
+
+      <div>
+        <button onClick={() => setShowAll(!showAll)}>
+          show {showAll ? 'important' : 'all'}
+        </button>
+      </div>
+      <ul>
+        {notesToShow.map((note, i) =>
+          <Note
+            key={i}
+            note={note}
+          />
+        )}
+      </ul>
     </div>
   )
 }
+
+export default App
