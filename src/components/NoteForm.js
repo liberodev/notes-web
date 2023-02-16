@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Togglable from './Togglable'
 
 export default function NoteForm ({ addNote, handleLogout }) {
   const [newNote, setNewNote] = useState('')
@@ -12,7 +13,7 @@ export default function NoteForm ({ addNote, handleLogout }) {
 
     const noteObject = {
       content: newNote,
-      important: false
+      important: Math.random() > 0.5
     }
 
     addNote(noteObject)
@@ -20,7 +21,7 @@ export default function NoteForm ({ addNote, handleLogout }) {
   }
 
   return (
-    <div>
+    <Togglable buttonLabel='New Note'>
       <h3>Create a new note</h3>
 
       <form onSubmit={handleSubmit}>
@@ -33,9 +34,9 @@ export default function NoteForm ({ addNote, handleLogout }) {
       </form>
       <div>
         <button onClick={handleLogout}>
-          Cerrar sesión
+          Logout
         </button>
       </div>
-    </div>
+    </Togglable>
   )
 }

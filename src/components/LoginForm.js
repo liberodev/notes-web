@@ -1,9 +1,10 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import Togglable from './Togglable'
 
 export default function LoginForm ({ handleSubmit, ...props }) {
   return (
-    <div>
+    <Togglable buttonLabel='Show login'>
       <form onSubmit={handleSubmit}>
         <div>
           <input
@@ -27,7 +28,8 @@ export default function LoginForm ({ handleSubmit, ...props }) {
           Login
         </button>
       </form>
-    </div>
+    </Togglable>
+
   )
 }
 
