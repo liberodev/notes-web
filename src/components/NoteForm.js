@@ -33,7 +33,7 @@ export default function NoteForm ({ addNote, handleLogout }) {
       </form>
       <div>
         <button onClick={handleLogout}>
-          Logout
+          Cerrar sesión
         </button>
       </div>
     </div>
