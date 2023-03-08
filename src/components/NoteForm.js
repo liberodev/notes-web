@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import Togglable from './Togglable'
 
 export default function NoteForm ({ addNote, handleLogout }) {
   const [newNote, setNewNote] = useState('')
+  const toggableRef = useRef()
 
   const handleChange = (event) => {
     setNewNote(event.target.value)
@@ -18,10 +19,11 @@ export default function NoteForm ({ addNote, handleLogout }) {
 
     addNote(noteObject)
     setNewNote('')
+    toggableRef.current.toggleVisibility()
   }
 
   return (
-    <Togglable buttonLabel='New Note'>
+    <Togglable buttonLabel='New Note' ref={toggableRef}>
       <h3>Create a new note</h3>
 
       <form onSubmit={handleSubmit}>
